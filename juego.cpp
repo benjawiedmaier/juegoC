@@ -7,7 +7,6 @@
 #include <ctime>
 #include <string>
 
-
 const int WIDTH  = 480;
 const int HEIGHT = 320;
 const int SIZE   = 64;
@@ -22,6 +21,12 @@ const int BASE_SPEED  = 7;
 const int BOOST_SPEED = 40;
 
 enum class State { SPLASH, PLAYING, GAME_OVER };
+
+// clamp personalizado
+template<typename T>
+T clamp(T val, T min, T max) {
+    return (val < min) ? min : (val > max) ? max : val;
+}
 
 // Carga textura de disco
 SDL_Texture* LoadTex(const char* path, SDL_Renderer* ren) {
@@ -51,7 +56,6 @@ void waitForKey(SDL_Renderer* ren, SDL_Texture* bg, SDL_Texture* txt1, SDL_Textu
         }
         SDL_RenderClear(ren);
         SDL_RenderCopy(ren,bg,nullptr,nullptr);
-        // centrar texto
         int w1,h1; SDL_QueryTexture(txt1,nullptr,nullptr,&w1,&h1);
         SDL_Rect r1{ (WIDTH-w1)/2, HEIGHT/3, w1,h1 };
         SDL_RenderCopy(ren,txt1,nullptr,&r1);
@@ -94,7 +98,6 @@ int main(int argc,char*argv[]){
     SDL_Window* win = SDL_CreateWindow("Pizza Game",SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED,WIDTH,HEIGHT,0);
     SDL_Renderer* ren = SDL_CreateRenderer(win,-1,SDL_RENDERER_ACCELERATED);
 
-    // cargar assets
     SDL_Texture* splashBg = LoadTex("assets/pizzeria.png",ren);
     SDL_Texture* bg       = LoadTex("assets/roads2.png",ren);
     SDL_Texture* plyTex   = LoadTex("assets/player.png",ren);
@@ -113,7 +116,6 @@ int main(int argc,char*argv[]){
     int score = 0;
     SDL_Rect player{60,100,SIZE,SIZE}, pizza{ rand()%(WIDTH-SIZE), rand()%(HEIGHT-SIZE), SIZE, SIZE };
 
-    // splash
     waitForKey(ren,splashBg,txtStart,txtPress);
     state = State::PLAYING;
     lastPick = SDL_GetTicks();
@@ -124,7 +126,6 @@ int main(int argc,char*argv[]){
         while(SDL_PollEvent(&e)){
             if(e.type==SDL_QUIT) goto end;
             if(state==State::PLAYING && e.type==SDL_KEYDOWN && e.key.keysym.scancode==SDL_SCANCODE_R){
-                // reset manual
                 lastPick = now;
                 boostOn = false; nextBoost = now;
                 player = {60,100,SIZE,SIZE};
@@ -133,7 +134,6 @@ int main(int argc,char*argv[]){
         }
 
         if(state==State::PLAYING){
-            // boost
             const Uint8* keys = SDL_GetKeyboardState(nullptr);
             if(keys[SDL_SCANCODE_E] && !boostOn && now>=nextBoost){
                 boostOn = true; boostStart = now;
@@ -144,32 +144,30 @@ int main(int argc,char*argv[]){
             }
             int sp = boostOn?BOOST_SPEED:BASE_SPEED;
 
-            // movimiento
             if(keys[SDL_SCANCODE_W]) player.y-=sp;
             if(keys[SDL_SCANCODE_S]) player.y+=sp;
             if(keys[SDL_SCANCODE_A]) player.x-=sp;
             if(keys[SDL_SCANCODE_D]) player.x+=sp;
-            // límites
-            player.x = SDL_clamp(player.x,0,WIDTH-SIZE);
-            player.y = SDL_clamp(player.y,0,HEIGHT-SIZE);
 
-            // colisión pizza
+            // límites (reemplazo de SDL_clamp)
+            player.x = clamp(player.x, 0, WIDTH - SIZE);
+            player.y = clamp(player.y, 0, HEIGHT - SIZE);
+
             if(SDL_HasIntersection(&player,&pizza)){
                 lastPick = now;
                 pizza = { rand()%(WIDTH-SIZE), rand()%(HEIGHT-SIZE), SIZE, SIZE };
                 score++;
             }
-            // timeout
+
             if(now-lastPick>PICKUP_TIMEOUT){
                 state = State::GAME_OVER;
             }
 
-            // render playing
             SDL_RenderClear(ren);
             SDL_RenderCopy(ren,bg,nullptr,nullptr);
             SDL_RenderCopy(ren,pizzaTex,nullptr,&pizza);
             SDL_RenderCopy(ren,plyTex,nullptr,&player);
-            // barra de tiempo
+
             float pct = float(PICKUP_TIMEOUT - (now-lastPick))/PICKUP_TIMEOUT;
             if(pct<0) pct=0;
             SDL_Rect bgBar{WIDTH-110,10,100,20}, fgBar{WIDTH-110,10,int(100*pct),20};
@@ -177,9 +175,6 @@ int main(int argc,char*argv[]){
             SDL_SetRenderDrawColor(ren,255,50,50,255); SDL_RenderFillRect(ren,&fgBar);
             SDL_SetRenderDrawColor(ren,255,255,255,255);
 
-            //hola
-
-            // render score
             std::string txt = "Pizzas: " + std::to_string(score);
             SDL_Texture* scoreTex = RenderText(txt.c_str(), font, white, ren);
             int tw, th;
@@ -189,11 +184,9 @@ int main(int argc,char*argv[]){
             SDL_DestroyTexture(scoreTex);
             
             SDL_RenderPresent(ren);
-            
         }
         else if(state==State::GAME_OVER){
             waitForRestart(ren,bg,txtGameO,txtRetry);
-            // reset completo
             player = {60,100,SIZE,SIZE};
             pizza  = { rand()%(WIDTH-SIZE), rand()%(HEIGHT-SIZE), SIZE, SIZE };
             lastPick = SDL_GetTicks();
@@ -204,7 +197,6 @@ int main(int argc,char*argv[]){
     }
 
 end:
-    // cleanup
     SDL_DestroyTexture(splashBg);
     SDL_DestroyTexture(bg);
     SDL_DestroyTexture(plyTex);
