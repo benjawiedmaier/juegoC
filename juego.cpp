@@ -11,57 +11,47 @@ const int WIDTH  = 480;
 const int HEIGHT = 320;
 const int SIZE   = 64;
 
-// tiempos en ms
 const Uint32 PICKUP_TIMEOUT = 2000;
 const Uint32 BOOST_DURATION = 1000;
 const Uint32 BOOST_COOLDOWN = 5000;
 
-// velocidades
 const int BASE_SPEED  = 7;
 const int BOOST_SPEED = 40;
 
 enum class State { SPLASH, PLAYING, GAME_OVER };
 
-// clamp personalizado
-template<typename T>
-T clamp(T val, T min, T max) {
-    return (val < min) ? min : (val > max) ? max : val;
-}
-
-// Carga textura de disco
 SDL_Texture* LoadTex(const char* path, SDL_Renderer* ren) {
     SDL_Surface* s = IMG_Load(path);
-    if (!s) { std::cerr<<"IMG_Load "<<path<<" : "<<IMG_GetError()<<"\n"; return nullptr; }
-    SDL_Texture* t = SDL_CreateTextureFromSurface(ren,s);
+    if (!s) { std::cerr << "IMG_Load " << path << " : " << IMG_GetError() << "\n"; return nullptr; }
+    SDL_Texture* t = SDL_CreateTextureFromSurface(ren, s);
     SDL_FreeSurface(s);
     return t;
 }
 
-// Renderiza texto con SDL_ttf
 SDL_Texture* RenderText(const char* msg, TTF_Font* f, SDL_Color c, SDL_Renderer* ren) {
     SDL_Surface* surf = TTF_RenderUTF8_Blended(f, msg, c);
-    SDL_Texture* tex  = SDL_CreateTextureFromSurface(ren,surf);
+    SDL_Texture* tex = SDL_CreateTextureFromSurface(ren, surf);
     SDL_FreeSurface(surf);
     return tex;
 }
 
 void waitForKey(SDL_Renderer* ren, SDL_Texture* bg, SDL_Texture* txt1, SDL_Texture* txt2) {
     SDL_Event e;
-    bool w=true;
-    while(w){
-        while(SDL_PollEvent(&e)){
-            if(e.type==SDL_QUIT) exit(0);
-            if(e.type==SDL_KEYDOWN && e.key.keysym.scancode==SDL_SCANCODE_Q)
-                w=false;
+    bool w = true;
+    while (w) {
+        while (SDL_PollEvent(&e)) {
+            if (e.type == SDL_QUIT) exit(0);
+            if (e.type == SDL_KEYDOWN && e.key.keysym.scancode == SDL_SCANCODE_Q)
+                w = false;
         }
         SDL_RenderClear(ren);
-        SDL_RenderCopy(ren,bg,nullptr,nullptr);
-        int w1,h1; SDL_QueryTexture(txt1,nullptr,nullptr,&w1,&h1);
-        SDL_Rect r1{ (WIDTH-w1)/2, HEIGHT/3, w1,h1 };
-        SDL_RenderCopy(ren,txt1,nullptr,&r1);
-        int w2_,h2_; SDL_QueryTexture(txt2,nullptr,nullptr,&w2_,&h2_);
-        SDL_Rect r2{ WIDTH-w2_-10, HEIGHT-h2_-10, w2_,h2_ };
-        SDL_RenderCopy(ren,txt2,nullptr,&r2);
+        SDL_RenderCopy(ren, bg, nullptr, nullptr);
+        int w1, h1; SDL_QueryTexture(txt1, nullptr, nullptr, &w1, &h1);
+        SDL_Rect r1{ (WIDTH - w1) / 2, HEIGHT / 3, w1, h1 };
+        SDL_RenderCopy(ren, txt1, nullptr, &r1);
+        int w2_, h2_; SDL_QueryTexture(txt2, nullptr, nullptr, &w2_, &h2_);
+        SDL_Rect r2{ WIDTH - w2_ - 10, HEIGHT - h2_ - 10, w2_, h2_ };
+        SDL_RenderCopy(ren, txt2, nullptr, &r2);
         SDL_RenderPresent(ren);
         SDL_Delay(16);
     }
@@ -69,111 +59,120 @@ void waitForKey(SDL_Renderer* ren, SDL_Texture* bg, SDL_Texture* txt1, SDL_Textu
 
 void waitForRestart(SDL_Renderer* ren, SDL_Texture* bg, SDL_Texture* txt_go, SDL_Texture* txt2) {
     SDL_Event e;
-    bool w=true;
-    while(w){
-        while(SDL_PollEvent(&e)){
-            if(e.type==SDL_QUIT) exit(0);
-            if(e.type==SDL_KEYDOWN && e.key.keysym.scancode==SDL_SCANCODE_Q)
-                w=false;
+    bool w = true;
+    while (w) {
+        while (SDL_PollEvent(&e)) {
+            if (e.type == SDL_QUIT) exit(0);
+            if (e.type == SDL_KEYDOWN && e.key.keysym.scancode == SDL_SCANCODE_Q)
+                w = false;
         }
         SDL_RenderClear(ren);
-        SDL_RenderCopy(ren,bg,nullptr,nullptr);
-        int w1,h1; SDL_QueryTexture(txt_go,nullptr,nullptr,&w1,&h1);
-        SDL_Rect r1{ (WIDTH-w1)/2, HEIGHT/3, w1,h1 };
-        SDL_RenderCopy(ren,txt_go,nullptr,&r1);
-        int w2_,h2_; SDL_QueryTexture(txt2,nullptr,nullptr,&w2_,&h2_);
-        SDL_Rect r2{ WIDTH-w2_-10, HEIGHT-h2_-10, w2_,h2_ };
-        SDL_RenderCopy(ren,txt2,nullptr,&r2);
+        SDL_RenderCopy(ren, bg, nullptr, nullptr);
+        int w1, h1; SDL_QueryTexture(txt_go, nullptr, nullptr, &w1, &h1);
+        SDL_Rect r1{ (WIDTH - w1) / 2, HEIGHT / 3, w1, h1 };
+        SDL_RenderCopy(ren, txt_go, nullptr, &r1);
+        int w2_, h2_; SDL_QueryTexture(txt2, nullptr, nullptr, &w2_, &h2_);
+        SDL_Rect r2{ WIDTH - w2_ - 10, HEIGHT - h2_ - 10, w2_, h2_ };
+        SDL_RenderCopy(ren, txt2, nullptr, &r2);
         SDL_RenderPresent(ren);
         SDL_Delay(16);
     }
 }
 
-int main(int argc,char*argv[]){
+int main(int argc, char* argv[]) {
     SDL_SetMainReady();
-    if(SDL_Init(SDL_INIT_VIDEO)<0||IMG_Init(IMG_INIT_PNG)==0||TTF_Init()<0){
-        std::cerr<<"Init error: "<<SDL_GetError()<<"\n";return 1;
+    if (SDL_Init(SDL_INIT_VIDEO) < 0 || IMG_Init(IMG_INIT_PNG) == 0 || TTF_Init() < 0) {
+        std::cerr << "Init error: " << SDL_GetError() << "\n"; return 1;
     }
     srand((unsigned)time(nullptr));
-    SDL_Window* win = SDL_CreateWindow("Pizza Game",SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED,WIDTH,HEIGHT,0);
-    SDL_Renderer* ren = SDL_CreateRenderer(win,-1,SDL_RENDERER_ACCELERATED);
+    SDL_Window* win = SDL_CreateWindow("Pizza Game", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, 0);
+    SDL_Renderer* ren = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED);
 
-    SDL_Texture* splashBg = LoadTex("assets/pizzeria.png",ren);
-    SDL_Texture* bg       = LoadTex("assets/roads2.png",ren);
-    SDL_Texture* plyTex   = LoadTex("assets/player.png",ren);
-    SDL_Texture* pizzaTex = LoadTex("assets/pizza_piece.png",ren);
+    SDL_Texture* splashBg = LoadTex("assets/pizzeria.png", ren);
+    SDL_Texture* bg = LoadTex("assets/roads2.png", ren);
+    SDL_Texture* plyTex = LoadTex("assets/player.png", ren);
+    SDL_Texture* pizzaTex = LoadTex("assets/pizza_piece.png", ren);
 
-    TTF_Font* font = TTF_OpenFont("assets/font.ttf",24);
-    SDL_Color white{255,255,255,255};
-    SDL_Texture* txtStart = RenderText("Game Start!",font,white,ren);
-    SDL_Texture* txtPress = RenderText("Press A to start",font,white,ren);
-    SDL_Texture* txtGameO = RenderText("Game Over",font,white,ren);
-    SDL_Texture* txtRetry = RenderText("Press A to restart",font,white,ren);
+    TTF_Font* font = TTF_OpenFont("assets/font.ttf", 24);
+    SDL_Color white{ 255, 255, 255, 255 };
+    SDL_Texture* txtStart = RenderText("Game Start!", font, white, ren);
+    SDL_Texture* txtPress = RenderText("Press A to start", font, white, ren);
+    SDL_Texture* txtGameO = RenderText("Game Over", font, white, ren);
+    SDL_Texture* txtRetry = RenderText("Press A to restart", font, white, ren);
 
     State state = State::SPLASH;
-    Uint32 lastPick=0, boostStart=0, nextBoost=0;
-    bool boostOn=false;
+    Uint32 lastPick = 0, boostStart = 0, nextBoost = 0;
+    bool boostOn = false;
     int score = 0;
-    SDL_Rect player{60,100,SIZE,SIZE}, pizza{ rand()%(WIDTH-SIZE), rand()%(HEIGHT-SIZE), SIZE, SIZE };
+    int nextTurboScore = 10 + rand() % 11;
 
-    waitForKey(ren,splashBg,txtStart,txtPress);
+    SDL_Rect player{ 60, 100, SIZE, SIZE }, pizza{ rand() % (WIDTH - SIZE), rand() % (HEIGHT - SIZE), SIZE, SIZE };
+
+    waitForKey(ren, splashBg, txtStart, txtPress);
     state = State::PLAYING;
     lastPick = SDL_GetTicks();
 
     SDL_Event e;
-    while(true){
+    while (true) {
         Uint32 now = SDL_GetTicks();
-        while(SDL_PollEvent(&e)){
-            if(e.type==SDL_QUIT) goto end;
-            if(state==State::PLAYING && e.type==SDL_KEYDOWN && e.key.keysym.scancode==SDL_SCANCODE_R){
+        while (SDL_PollEvent(&e)) {
+            if (e.type == SDL_QUIT) goto end;
+            if (state == State::PLAYING && e.type == SDL_KEYDOWN && e.key.keysym.scancode == SDL_SCANCODE_R) {
                 lastPick = now;
-                boostOn = false; nextBoost = now;
-                player = {60,100,SIZE,SIZE};
-                pizza  = { rand()%(WIDTH-SIZE), rand()%(HEIGHT-SIZE), SIZE, SIZE };
+                boostOn = false;
+                nextBoost = now;
+                score = 0;
+                nextTurboScore = 10 + rand() % 11;
+                player = { 60, 100, SIZE, SIZE };
+                pizza = { rand() % (WIDTH - SIZE), rand() % (HEIGHT - SIZE), SIZE, SIZE };
             }
         }
 
-        if(state==State::PLAYING){
+        if (state == State::PLAYING) {
             const Uint8* keys = SDL_GetKeyboardState(nullptr);
-            if(keys[SDL_SCANCODE_E] && !boostOn && now>=nextBoost){
-                boostOn = true; boostStart = now;
+
+            // turbo por tecla o por score alcanzado
+            if ((keys[SDL_SCANCODE_E] || (score >= nextTurboScore)) && !boostOn && now >= nextBoost) {
+                boostOn = true;
+                boostStart = now;
+                if (score >= nextTurboScore)
+                    nextTurboScore = score + 10 + rand() % 11;
             }
-            if(boostOn && now-boostStart>BOOST_DURATION){
-                boostOn=false;
+            if (boostOn && now - boostStart > BOOST_DURATION) {
+                boostOn = false;
                 nextBoost = now + BOOST_COOLDOWN - BOOST_DURATION;
             }
-            int sp = boostOn?BOOST_SPEED:BASE_SPEED;
+            int sp = boostOn ? BOOST_SPEED : BASE_SPEED;
 
-            if(keys[SDL_SCANCODE_W]) player.y-=sp;
-            if(keys[SDL_SCANCODE_S]) player.y+=sp;
-            if(keys[SDL_SCANCODE_A]) player.x-=sp;
-            if(keys[SDL_SCANCODE_D]) player.x+=sp;
+            if (keys[SDL_SCANCODE_W]) player.y -= sp;
+            if (keys[SDL_SCANCODE_S]) player.y += sp;
+            if (keys[SDL_SCANCODE_A]) player.x -= sp;
+            if (keys[SDL_SCANCODE_D]) player.x += sp;
+            if (player.x < 0) player.x = 0;
+            if (player.x > WIDTH - SIZE) player.x = WIDTH - SIZE;
+            if (player.y < 0) player.y = 0;
+            if (player.y > HEIGHT - SIZE) player.y = HEIGHT - SIZE;
 
-            // límites (reemplazo de SDL_clamp)
-            player.x = clamp(player.x, 0, WIDTH - SIZE);
-            player.y = clamp(player.y, 0, HEIGHT - SIZE);
-
-            if(SDL_HasIntersection(&player,&pizza)){
+            if (SDL_HasIntersection(&player, &pizza)) {
                 lastPick = now;
-                pizza = { rand()%(WIDTH-SIZE), rand()%(HEIGHT-SIZE), SIZE, SIZE };
+                pizza = { rand() % (WIDTH - SIZE), rand() % (HEIGHT - SIZE), SIZE, SIZE };
                 score++;
             }
-
-            if(now-lastPick>PICKUP_TIMEOUT){
+            if (now - lastPick > PICKUP_TIMEOUT) {
                 state = State::GAME_OVER;
             }
 
             SDL_RenderClear(ren);
-            SDL_RenderCopy(ren,bg,nullptr,nullptr);
-            SDL_RenderCopy(ren,pizzaTex,nullptr,&pizza);
-            SDL_RenderCopy(ren,plyTex,nullptr,&player);
+            SDL_RenderCopy(ren, bg, nullptr, nullptr);
+            SDL_RenderCopy(ren, pizzaTex, nullptr, &pizza);
+            SDL_RenderCopy(ren, plyTex, nullptr, &player);
 
-            float pct = float(PICKUP_TIMEOUT - (now-lastPick))/PICKUP_TIMEOUT;
-            if(pct<0) pct=0;
-            SDL_Rect bgBar{WIDTH-110,10,100,20}, fgBar{WIDTH-110,10,int(100*pct),20};
-            SDL_SetRenderDrawColor(ren,0,0,0,255); SDL_RenderFillRect(ren,&bgBar);
-            SDL_SetRenderDrawColor(ren,255,50,50,255); SDL_RenderFillRect(ren,&fgBar);
-            SDL_SetRenderDrawColor(ren,255,255,255,255);
+            float pct = float(PICKUP_TIMEOUT - (now - lastPick)) / PICKUP_TIMEOUT;
+            if (pct < 0) pct = 0;
+            SDL_Rect bgBar{ WIDTH - 110, 10, 100, 20 }, fgBar{ WIDTH - 110, 10, int(100 * pct), 20 };
+            SDL_SetRenderDrawColor(ren, 0, 0, 0, 255); SDL_RenderFillRect(ren, &bgBar);
+            SDL_SetRenderDrawColor(ren, 255, 50, 50, 255); SDL_RenderFillRect(ren, &fgBar);
+            SDL_SetRenderDrawColor(ren, 255, 255, 255, 255);
 
             std::string txt = "Pizzas: " + std::to_string(score);
             SDL_Texture* scoreTex = RenderText(txt.c_str(), font, white, ren);
@@ -182,15 +181,18 @@ int main(int argc,char*argv[]){
             SDL_Rect dst{ 10, 10, tw, th };
             SDL_RenderCopy(ren, scoreTex, nullptr, &dst);
             SDL_DestroyTexture(scoreTex);
-            
+
             SDL_RenderPresent(ren);
         }
-        else if(state==State::GAME_OVER){
-            waitForRestart(ren,bg,txtGameO,txtRetry);
-            player = {60,100,SIZE,SIZE};
-            pizza  = { rand()%(WIDTH-SIZE), rand()%(HEIGHT-SIZE), SIZE, SIZE };
+        else if (state == State::GAME_OVER) {
+            waitForRestart(ren, bg, txtGameO, txtRetry);
+            player = { 60, 100, SIZE, SIZE };
+            pizza = { rand() % (WIDTH - SIZE), rand() % (HEIGHT - SIZE), SIZE, SIZE };
             lastPick = SDL_GetTicks();
-            boostOn=false; nextBoost=lastPick;
+            boostOn = false;
+            nextBoost = lastPick;
+            score = 0;
+            nextTurboScore = 10 + rand() % 11;
             state = State::PLAYING;
         }
         SDL_Delay(16);
