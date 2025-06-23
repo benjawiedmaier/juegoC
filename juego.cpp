@@ -136,7 +136,7 @@ int main(int argc, char* argv[]) {
                 boostOn = true;
                 boostStart = now;
                 if (score >= nextTurboScore)
-                    nextTurboScore = score + 10 + rand() % 11;
+                    nextTurboScore = score + 30 + rand() % 11;
             }
             if (boostOn && now - boostStart > BOOST_DURATION) {
                 boostOn = false;
