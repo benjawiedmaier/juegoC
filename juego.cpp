@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <string>
+#include <cmath>
 
 const int WIDTH  = 480;
 const int HEIGHT = 320;
@@ -19,6 +20,24 @@ const int BASE_SPEED  = 7;
 const int BOOST_SPEED = 40;
 
 enum class State { SPLASH, PLAYING, GAME_OVER };
+
+// Distancia entre dos puntos
+float dist(int x1, int y1, int x2, int y2) {
+    int dx = x1 - x2;
+    int dy = y1 - y2;
+    return std::sqrt(dx * dx + dy * dy);
+}
+
+// Posición aleatoria de pizza con zona segura
+SDL_Rect generarPizza(int score, SDL_Rect player) {
+    int px, py;
+    int minDist = std::min(20 + (score / 30) * 20, 180); // crece con el score, máx 180
+    do {
+        px = rand() % (WIDTH - SIZE);
+        py = rand() % (HEIGHT - SIZE);
+    } while (dist(px + SIZE / 2, py + SIZE / 2, player.x + SIZE / 2, player.y + SIZE / 2) < minDist);
+    return SDL_Rect{ px, py, SIZE, SIZE };
+}
 
 SDL_Texture* LoadTex(const char* path, SDL_Renderer* ren) {
     SDL_Surface* s = IMG_Load(path);
@@ -104,9 +123,10 @@ int main(int argc, char* argv[]) {
     Uint32 lastPick = 0, boostStart = 0, nextBoost = 0;
     bool boostOn = false;
     int score = 0;
-    int nextTurboScore = 10 + rand() % 11;
+    int nextTurboScore = 30 + rand() % 11;
 
-    SDL_Rect player{ 60, 100, SIZE, SIZE }, pizza{ rand() % (WIDTH - SIZE), rand() % (HEIGHT - SIZE), SIZE, SIZE };
+    SDL_Rect player{ 60, 100, SIZE, SIZE };
+    SDL_Rect pizza = generarPizza(score, player);
 
     waitForKey(ren, splashBg, txtStart, txtPress);
     state = State::PLAYING;
@@ -122,16 +142,15 @@ int main(int argc, char* argv[]) {
                 boostOn = false;
                 nextBoost = now;
                 score = 0;
-                nextTurboScore = 10 + rand() % 11;
+                nextTurboScore = 30 + rand() % 11;
                 player = { 60, 100, SIZE, SIZE };
-                pizza = { rand() % (WIDTH - SIZE), rand() % (HEIGHT - SIZE), SIZE, SIZE };
+                pizza = generarPizza(score, player);
             }
         }
 
         if (state == State::PLAYING) {
             const Uint8* keys = SDL_GetKeyboardState(nullptr);
 
-            // turbo por tecla o por score alcanzado
             if ((keys[SDL_SCANCODE_E] || (score >= nextTurboScore)) && !boostOn && now >= nextBoost) {
                 boostOn = true;
                 boostStart = now;
@@ -148,16 +167,16 @@ int main(int argc, char* argv[]) {
             if (keys[SDL_SCANCODE_S]) player.y += sp;
             if (keys[SDL_SCANCODE_A]) player.x -= sp;
             if (keys[SDL_SCANCODE_D]) player.x += sp;
-            if (player.x < 0) player.x = 0;
-            if (player.x > WIDTH - SIZE) player.x = WIDTH - SIZE;
-            if (player.y < 0) player.y = 0;
-            if (player.y > HEIGHT - SIZE) player.y = HEIGHT - SIZE;
+
+            player.x = std::max(0, std::min(player.x, WIDTH - SIZE));
+            player.y = std::max(0, std::min(player.y, HEIGHT - SIZE));
 
             if (SDL_HasIntersection(&player, &pizza)) {
                 lastPick = now;
-                pizza = { rand() % (WIDTH - SIZE), rand() % (HEIGHT - SIZE), SIZE, SIZE };
                 score++;
+                pizza = generarPizza(score, player);
             }
+
             if (now - lastPick > PICKUP_TIMEOUT) {
                 state = State::GAME_OVER;
             }
@@ -187,14 +206,15 @@ int main(int argc, char* argv[]) {
         else if (state == State::GAME_OVER) {
             waitForRestart(ren, bg, txtGameO, txtRetry);
             player = { 60, 100, SIZE, SIZE };
-            pizza = { rand() % (WIDTH - SIZE), rand() % (HEIGHT - SIZE), SIZE, SIZE };
+            score = 0;
+            nextTurboScore = 30 + rand() % 11;
+            pizza = generarPizza(score, player);
             lastPick = SDL_GetTicks();
             boostOn = false;
             nextBoost = lastPick;
-            score = 0;
-            nextTurboScore = 10 + rand() % 11;
             state = State::PLAYING;
         }
+
         SDL_Delay(16);
     }
 
