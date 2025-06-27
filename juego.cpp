@@ -104,7 +104,13 @@ int main(int argc, char* argv[]) {
         std::cerr << "Init error: " << SDL_GetError() << "\n"; return 1;
     }
     srand((unsigned)time(nullptr));
-    SDL_Window* win = SDL_CreateWindow("Pizza Game", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, 0);
+    SDL_Window* win = SDL_CreateWindow(
+        "Pizza Game",
+        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+        0, 0,
+        SDL_WINDOW_FULLSCREEN_DESKTOP | SDL_WINDOW_ALLOW_HIGHDPI
+    );
+
     SDL_Renderer* ren = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED);
 
     SDL_Texture* splashBg = LoadTex("assets/pizzeria.png", ren);
