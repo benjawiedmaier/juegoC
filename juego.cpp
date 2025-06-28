@@ -17,8 +17,8 @@ const Uint32 PICKUP_TIMEOUT = 2000;
 const Uint32 BOOST_DURATION = 1000;
 const Uint32 BOOST_COOLDOWN = 5000;
 
-const int BASE_SPEED  = 12;
-const int BOOST_SPEED = 40;
+const int BASE_SPEED  = 30;
+const int BOOST_SPEED = 60;
 
 enum class State { SPLASH, PLAYING, GAME_OVER };
 
